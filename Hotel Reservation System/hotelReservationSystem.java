@@ -2,7 +2,7 @@
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Scanner;
-
+import java.sql.ResultSet;
 import java.sql.Connection;
 import java.sql.Statement;
 
@@ -38,7 +38,7 @@ public class hotelReservationSystem {
                         reserveRoom(connection, scanner);
                         break;
                     case 2:
-                        ///viewReservations(connection);
+                        viewReservations(connection);
                         break;
                     case 3:
                         //getRoomNumber(connection, scanner);
@@ -64,13 +64,17 @@ public class hotelReservationSystem {
     }
     private static void reserveRoom(Connection connection, Scanner scanner){
         try{
-            System.out.println("Enter guest name: ");
-            String guestName= scanner.nextLine();
-            System.out.println("Enter room number: ");
+            System.out.print("Enter guest name: ");
+            String guestName= scanner.next();
+            scanner.nextLine();
+            System.out.print("Enter room number: ");
             int roomNumber=scanner.nextInt();
+            System.out.print("Enter Contact number: ");
             String contactNumber=scanner.next();
+            scanner.nextLine();
 
-            String sql= "INSERT INTO reservations (guestName, roomNumber, contactNumber)"+"VALUES('"+guestName+"',"+roomNumber+",'"+contactNumber+"')";
+            String sql=
+                    "INSERT INTO reservations (guest_name, room_number, contact_number)"+"VALUES('"+guestName+"',"+roomNumber+",'"+contactNumber+"')";
             try(Statement statement=connection.createStatement()){
                 int affectedrows=statement.executeUpdate(sql);
                 if(affectedrows>0){
@@ -81,10 +85,34 @@ public class hotelReservationSystem {
                 }
 
             }
-            }catch (SQLException e){
+        }catch (SQLException e){
             e.printStackTrace();
         }
     }
 
+    public static void viewReservations(Connection connection) throws SQLException{
+        //String sql="SELECT * FROM reservations";
+        String sql = "SELECT reservation_id, guest_name, room_number, contact_number, reservation_date FROM reservations";
+        try(Statement statement=connection.createStatement()){
+            ResultSet resultSet=statement.executeQuery(sql);
+            System.out.println("Total Reservations");
+            System.out.println("+-------------------+---------------+---------------+-----------------+------------+");
+            System.out.println("|   Reservation ID  |   Guest Name  |  Room Number  |  Contact Number |    Date    |");
+            System.out.println("+-------------------+---------------+---------------+-----------------+------------+");
+            while (resultSet.next()){
+                int reservationid=resultSet.getInt("reservation_id");
+                String guestname=resultSet.getString("guest_name");
+                int roomnumber=resultSet.getInt("room_number");
+                String contactnumber=resultSet.getString("contact_number");
+                String reservationtime=resultSet.getTimestamp("reservation_date").toString();
+                System.out.printf("| %-14d | %-15s | %-13d | %-20s | %-19s |\n",
+                        reservationid, guestname, roomnumber, contactnumber, reservationtime);
+
+            }
+            System.out.println("------------------------------------------------------------------------------------");
+        }
+    }
+
 }
+
 
