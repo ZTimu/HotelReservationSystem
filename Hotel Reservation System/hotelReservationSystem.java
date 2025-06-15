@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.Connection;
 import java.sql.Statement;
 
+
 public class hotelReservationSystem {
     private static final String url="jdbc:mysql://localhost:3306/hotel_db";
     private static final String username="root";
@@ -41,7 +42,7 @@ public class hotelReservationSystem {
                         viewReservations(connection);
                         break;
                     case 3:
-                        //getRoomNumber(connection, scanner);
+                        getRoomNumber(connection, scanner);
                         break;
                     case 4:
                         //updateReservation(connection, scanner);
@@ -90,7 +91,7 @@ public class hotelReservationSystem {
         }
     }
 
-    public static void viewReservations(Connection connection) throws SQLException{
+    private static void viewReservations(Connection connection) throws SQLException{
         //String sql="SELECT * FROM reservations";
         String sql = "SELECT reservation_id, guest_name, room_number, contact_number, reservation_date FROM reservations";
         try(Statement statement=connection.createStatement()){
@@ -110,9 +111,40 @@ public class hotelReservationSystem {
 
             }
             System.out.println("------------------------------------------------------------------------------------");
+
         }
     }
 
+
+
+private static void getRoomNumber(Connection connection, Scanner scanner) {
+    try{
+        System.out.print("Enter reservation ID: ");
+        int reservationid=scanner.nextInt();
+        System.out.print("Enter Name: ");
+        String guestname=scanner.next();
+        scanner.nextLine();
+        String sql= "SELECT room_number FROM reservations"+" WHERE reservation_id="+reservationid +" AND guest_name= " +
+                "'"+guestname+"'";
+
+        try(Statement statement= connection.createStatement();
+        ResultSet resultSet =statement.executeQuery(sql)){
+            if(resultSet.next()){
+                int roomnumber=resultSet.getInt("room_number");
+                System.out.println("Reservation ID: "+reservationid+ " room number is: "+roomnumber);
+            }
+            else{
+                System.out.println("Reservation not found. Please book");
+            }
+
+        }
+    }catch (SQLException e){
+        e.printStackTrace();
+    }
+
 }
+
+}
+
 
 
