@@ -76,9 +76,12 @@ public class hotelReservationSystem {
             scanner.nextLine();
 
             String sql =
-                    "INSERT INTO reservations (guest_name, room_number, contact_number)" + "VALUES('" + guestName + "'," + roomNumber + ",'" + contactNumber + "')";
-            try (Statement statement = connection.createStatement()) {
-                int affectedrows = statement.executeUpdate(sql);
+                    "INSERT INTO reservations (guest_name, room_number, contact_number) VALUES(?,?,?)";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1,guestName );
+                preparedStatement.setInt(2, roomNumber);
+                preparedStatement.setString(3, contactNumber);
+                int affectedrows = preparedStatement.executeUpdate();
                 if (affectedrows > 0) {
                     System.out.println("Reservation Successfull.");
                 } else {
@@ -93,9 +96,9 @@ public class hotelReservationSystem {
 
     private static void viewReservations(Connection connection) throws SQLException {
         //String sql="SELECT * FROM reservations";
-        String sql = "SELECT reservation_id, guest_name, room_number, contact_number, reservation_date FROM reservations";
-        try (Statement statement = connection.createStatement()) {
-            ResultSet resultSet = statement.executeQuery(sql);
+        String sql = "SELECT * FROM reservations";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            ResultSet resultSet = preparedStatement.executeQuery()){
             System.out.println("Total Reservations");
             System.out.println("+-------------------+---------------+---------------+-----------------+------------+");
             System.out.println("|   Reservation ID  |   Guest Name  |  Room Number  |  Contact Number |    Date    |");
@@ -120,14 +123,16 @@ public class hotelReservationSystem {
         try {
             System.out.print("Enter reservation ID: ");
             int reservationid = scanner.nextInt();
-            System.out.print("Enter Name: ");
-            String guestname = scanner.next();
             scanner.nextLine();
-            String sql = "SELECT room_number FROM reservations" + " WHERE reservation_id=" + reservationid + " AND guest_name= " +
-                    "'" + guestname + "'";
+            System.out.print("Enter Name: ");
+            String guestname = scanner.nextLine();
 
-            try (Statement statement = connection.createStatement();
-                 ResultSet resultSet = statement.executeQuery(sql)) {
+            String sql = "SELECT room_number FROM reservations WHERE reservation_id=? AND guest_name= ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)){
+                preparedStatement.setInt(1,reservationid);
+                preparedStatement.setString(2, guestname);
+                 ResultSet resultSet = preparedStatement.executeQuery();
                 if (resultSet.next()) {
                     int roomnumber = resultSet.getInt("room_number");
                     System.out.println("Reservation ID: " + reservationid + " room number is: " + roomnumber);
@@ -160,14 +165,14 @@ public class hotelReservationSystem {
             String newContactNumber = scanner.next();
 
             String sql =
-                    "UPDATE reservations SET guest_name='" + newGuestName + "', " +
-                            "room_number=" + newRoomNumber + ", " +
-                            "contact_number='" + newContactNumber + "' " +
-                            "WHERE reservation_id=" + updateID;
+                    "UPDATE reservations SET guest_name = ?, room_number = ?, contact_number = ? WHERE reservation_id = ?";
 
-
-            try (Statement statement = connection.createStatement()) {
-                int affectedrows = statement.executeUpdate(sql);
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1,newGuestName);
+                preparedStatement.setInt(2,newRoomNumber);
+                preparedStatement.setString(3,newContactNumber);
+                preparedStatement.setInt(4,updateID);
+                int affectedrows = preparedStatement.executeUpdate();
                 if (affectedrows > 0) {
                     System.out.println("Reservation Updated Successfully!");
                 } else {
@@ -189,9 +194,10 @@ public class hotelReservationSystem {
                 System.out.println("Reservation ID does not existed, please try again!");
                 return;
             }
-            String sql = "DELETE FROM reservations WHERE reservation_id= " + deleteReservationId;
-            try (Statement statement = connection.createStatement()) {
-                int affectedrows = statement.executeUpdate(sql);
+            String sql = "DELETE FROM reservations WHERE reservation_id=? ";
+            try (PreparedStatement preparedStatement=connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1,deleteReservationId);
+                int affectedrows = preparedStatement.executeUpdate();
                 if (affectedrows > 0) {
                     System.out.println("Deletion Successfull!");
                 } else {
@@ -206,10 +212,11 @@ public class hotelReservationSystem {
     private static boolean reservationExists(Connection connection, int reservationid) {
 
         try {
-            String sql = "SELECT reservation_id FROM reservations WHERE reservation_id=" + reservationid;
+            String sql = "SELECT reservation_id FROM reservations WHERE reservation_id=?";
 
-            try (Statement statement = connection.createStatement()) {
-                ResultSet resultSet = statement.executeQuery(sql);
+            try (PreparedStatement preparedStatement=connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1,reservationid );
+                ResultSet resultSet = preparedStatement.executeQuery();
                 return resultSet.next();// means data found, So reservation exists
             }
         } catch (SQLException e) {// handling databases erros
